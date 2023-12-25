@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        #circle {
+            display: none; /* Hide the circle by default */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px; /* Adjust the size of the circle */
+            height: 50px; /* Adjust the size of the circle */
+            border-radius: 50%;
+            background-color: black;
+        }
+        
+        .pipe {
+            position: absolute;
+            width: 100px; /* Adjust the width of the pipe */
+            height: 200px; /* Adjust the height of the pipe */
+            background-color: green;
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            line-height: 200px;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            color: red;
+        }
+
+        .title-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            color: black;
+        }
+
+        .start-button {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: white;
+            background-color: blue;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="title-screen">FlappyBirds（仮）</div>
+    <button class="start-button" onclick="startGame()">Start</button>
+    <div id="circle"></div>
+    <p id="clickCount">0</p>
+    <div class="score" id="score">Score: 0</div>
+
+    <script>
+        var circle = document.getElementById("circle");
+        var positionY = 0;
+        var velocityY = 1;
+        var accelerationY = 0.3;
+        var clickCount = 0;
+        var pipes = [];
+        var gameOver = false;
+        var score = 0;
+
+        function createPipe() {
+            var pipe = document.createElement("div");
+            pipe.className = "pipe";
+            pipe.style.top = Math.random() * (window.innerHeight - 200) + "px";
+            pipe.style.left = window.innerWidth + "px";
+            document.body.appendChild(pipe);
+            pipes.push(pipe);
+        }
+
+        function update() {
+            if (gameOver) {
+                return;
+            }
+
+            velocityY += accelerationY;
+            positionY += velocityY;
+            circle.style.top = positionY + "px";
+
+            for (var i = 0; i < pipes.length; i++) {
+                var pipe = pipes[i];
+                var positionX = parseInt(pipe.style.left);
+                positionX -= 2;
+                pipe.style.left = positionX + "px";
+
+                if (positionX < -100) {
+                    pipe.parentNode.removeChild(pipe);
+                    pipes.splice(i, 1);
+                    i--;
+                    score++; // Increase the score when a pipe is passed
+                    document.getElementById("score").textContent = "Score: " + score;
+                }
+
+                // Collision detection
+                var circleRect = circle.getBoundingClientRect();
+                var pipeRect = pipe.getBoundingClientRect();
+
+                if (circleRect.left < pipeRect.right &&
+                    circleRect.right > pipeRect.left &&
+                    circleRect.top < pipeRect.bottom &&
+                    circleRect.bottom > pipeRect.top) {
+                    gameOver = true;
+                    document.body.innerHTML += '<div class="game-over">GameOver</div>';
+                    document.body.innerHTML += '<button class="retry-button" onclick="retryGame()">Retry</button>';
+                }
+            }
+
+            if (Math.random() < 0.01) {
+                createPipe();
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        function startGame() {
+            var titleScreen = document.querySelector(".title-screen");
+            var startButton = document.querySelector(".start-button");
+            titleScreen.style.display = "none";
+            startButton.style.display = "none";
+            circle.style.display = "block"; // Show the circle when the game starts
+            update();
+        }
+
+        document.addEventListener("click", function(event) {
+            velocityY = -10; // Adjust the value to control the upward velocity
+            clickCount++;
+            document.getElementById("clickCount").textContent = clickCount;
+        });
+    </script>
+</body>
+</html>
